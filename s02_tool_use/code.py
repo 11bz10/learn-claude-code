@@ -16,14 +16,14 @@ s02: Tool Use — 在 s01 基础上新增 4 个工具 + 分发映射。
 import os, subprocess
 from pathlib import Path
 
-try:
-    import readline
-    readline.parse_and_bind('set bind-tty-special-chars off')
-    readline.parse_and_bind('set input-meta on')
-    readline.parse_and_bind('set output-meta on')
-    readline.parse_and_bind('set convert-meta off')
-except ImportError:
-    pass
+# try:
+#     import readline
+#     readline.parse_and_bind('set bind-tty-special-chars off')
+#     readline.parse_and_bind('set input-meta on')
+#     readline.parse_and_bind('set output-meta on')
+#     readline.parse_and_bind('set convert-meta off')
+# except ImportError:
+#     pass
 
 from anthropic import Anthropic
 from dotenv import load_dotenv
