@@ -30,11 +30,11 @@ import ast, json, os, subprocess
 from pathlib import Path
 import yaml
 
-try:
-    import readline
-    readline.parse_and_bind('set bind-tty-special-chars off')
-except ImportError:
-    pass
+# try:
+#     import readline
+#     readline.parse_and_bind('set bind-tty-special-chars off')
+# except ImportError:
+#     pass
 
 from anthropic import Anthropic
 from dotenv import load_dotenv

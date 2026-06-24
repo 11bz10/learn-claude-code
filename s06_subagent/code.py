@@ -31,11 +31,11 @@ Needs: pip install anthropic python-dotenv + ANTHROPIC_API_KEY in .env
 import ast, json, os, subprocess
 from pathlib import Path
 
-try:
-    import readline
-    readline.parse_and_bind('set bind-tty-special-chars off')
-except ImportError:
-    pass
+# try:
+#     import readline
+#     readline.parse_and_bind('set bind-tty-special-chars off')
+# except ImportError:
+#     pass
 
 from anthropic import Anthropic
 from dotenv import load_dotenv
@@ -249,6 +249,7 @@ def spawn_subagent(description: str) -> str:
     return result  # only summary, entire message history discarded
 
 # Add task tool to parent's tools
+# 给父agent添加一个工具，能够创建一个子agent，并返回其结果
 TOOLS.append({
     "name": "task",
     "description": "Launch a subagent to handle a complex subtask. Returns only the final conclusion.",
