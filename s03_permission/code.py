@@ -30,14 +30,14 @@ Builds on s02 (multi-tool). Usage:
 import os, subprocess
 from pathlib import Path
 
-try:
-    import readline
-    readline.parse_and_bind('set bind-tty-special-chars off')
-    readline.parse_and_bind('set input-meta on')
-    readline.parse_and_bind('set output-meta on')
-    readline.parse_and_bind('set convert-meta off')
-except ImportError:
-    pass
+# try:
+#     import readline
+#     readline.parse_and_bind('set bind-tty-special-chars off')
+#     readline.parse_and_bind('set input-meta on')
+#     readline.parse_and_bind('set output-meta on')
+#     readline.parse_and_bind('set convert-meta off')
+# except ImportError:
+#     pass
 
 from anthropic import Anthropic
 from dotenv import load_dotenv
@@ -146,6 +146,7 @@ TOOL_HANDLERS = {
 # ═══════════════════════════════════════════════════════════
 
 # Gate 1: Hard deny list — always forbidden
+# 禁止的操作列表
 DENY_LIST = ["rm -rf /", "sudo", "shutdown", "reboot", "mkfs", "dd if=", "> /dev/sda"]
 
 def check_deny_list(command: str) -> str | None:
@@ -157,9 +158,11 @@ def check_deny_list(command: str) -> str | None:
 
 # Gate 2: Rule matching — context-dependent checks
 PERMISSION_RULES = [
+    # 判断是否试图写入工作目录之外的文件
     {"tools": ["write_file", "edit_file"],
      "check": lambda args: not (WORKDIR / args.get("path", "")).resolve().is_relative_to(WORKDIR),
      "message": "Writing outside workspace"},
+    # 禁止执行 rm 命令或修改权限到 777
     {"tools": ["bash"],
      "check": lambda args: any(kw in args.get("command", "") for kw in ["rm ", "> /etc/", "chmod 777"]),
      "message": "Potentially destructive command"},
@@ -167,6 +170,7 @@ PERMISSION_RULES = [
 
 def check_rules(tool_name: str, args: dict) -> str | None:
     for rule in PERMISSION_RULES:
+        # 命中了这几个的话就要返回对应的msg，等待用户确认
         if tool_name in rule["tools"] and rule["check"](args):
             return rule["message"]
     return None
@@ -179,7 +183,18 @@ def ask_user(tool_name: str, args: dict, reason: str) -> str:
     choice = input("   Allow? [y/N] ").strip().lower()
     return "allow" if choice in ("y", "yes") else "deny"
 
-
+"""
+工具调用
+  ↓
+若是 bash：先检查绝对禁止命令
+  ├─ 命中 → 直接拒绝
+  └─ 未命中 ↓
+检查一般风险规则
+  ├─ 命中 → 询问用户
+  │           ├─ 用户拒绝 → 拒绝
+  │           └─ 用户同意 → 允许
+  └─ 未命中 → 允许
+"""
 # Pipeline: all three gates chained
 def check_permission(block) -> bool:
     if block.name == "bash":

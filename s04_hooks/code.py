@@ -51,14 +51,14 @@ Needs: pip install anthropic python-dotenv + ANTHROPIC_API_KEY in .env
 import os, subprocess
 from pathlib import Path
 
-try:
-    import readline
-    readline.parse_and_bind('set bind-tty-special-chars off')
-    readline.parse_and_bind('set input-meta on')
-    readline.parse_and_bind('set output-meta on')
-    readline.parse_and_bind('set convert-meta off')
-except ImportError:
-    pass
+# try:
+#     import readline
+#     readline.parse_and_bind('set bind-tty-special-chars off')
+#     readline.parse_and_bind('set input-meta on')
+#     readline.parse_and_bind('set output-meta on')
+#     readline.parse_and_bind('set convert-meta off')
+# except ImportError:
+#     pass
 
 from anthropic import Anthropic
 from dotenv import load_dotenv
@@ -155,7 +155,10 @@ TOOL_HANDLERS = {
 # ═══════════════════════════════════════════════════════════
 #  NEW in s04: Hook System (s03 permission logic now via hooks)
 # ═══════════════════════════════════════════════════════════
-
+"""
+这段代码是在给 Agent 加一个“Hook（钩子）系统”：
+把权限检查、日志记录、输出监控、结束统计这些横切逻辑，从 agent_loop 主流程中抽出来。
+"""
 HOOKS = {"UserPromptSubmit": [], "PreToolUse": [], "PostToolUse": [], "Stop": []}
 
 def register_hook(event: str, callback):
@@ -173,6 +176,7 @@ def trigger_hooks(event: str, *args):
 DENY_LIST = ["rm -rf /", "sudo", "shutdown", "reboot", "mkfs", "dd if="]
 DESTRUCTIVE = ["rm ", "> /etc/", "chmod 777"]
 
+# 包装成 PreToolUse hook，返回非 None 则阻止工具调用，直接把返回值当作结果返回给 LLM
 def permission_hook(block):
     """PreToolUse: s03 check_permission() logic moved here."""
     if block.name == "bash":
@@ -197,6 +201,7 @@ def permission_hook(block):
                 return "Permission denied by user"
     return None
 
+# 记录一下每个工具的调用
 def log_hook(block):
     """PreToolUse: log every tool call."""
     args_preview = str(list(block.input.values())[:2])[:60]
@@ -215,6 +220,7 @@ def context_inject_hook(query: str):
     return None
 
 # Stop hook: print summary when loop is about to exit
+# 在结束之后就对工具的调用做一个总结
 def summary_hook(messages: list):
     tool_count = sum(1 for m in messages
                      for b in (m.get("content") if isinstance(m.get("content"), list) else [])
@@ -222,6 +228,7 @@ def summary_hook(messages: list):
     print(f"\033[90m[HOOK] Stop: session used {tool_count} tool calls\033[0m")
     return None
 
+# Register hooks
 register_hook("UserPromptSubmit", context_inject_hook)
 register_hook("PreToolUse", permission_hook)
 register_hook("PreToolUse", log_hook)
