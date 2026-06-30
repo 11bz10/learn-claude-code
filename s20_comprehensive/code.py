@@ -17,12 +17,12 @@ from datetime import datetime
 from dataclasses import dataclass, asdict, field
 import yaml
 
-try:
-    import readline
-    readline.parse_and_bind('set bind-tty-special-chars off')
-    READLINE_AVAILABLE = True
-except ImportError:
-    READLINE_AVAILABLE = False
+# try:
+#     import readline
+#     readline.parse_and_bind('set bind-tty-special-chars off')
+#     READLINE_AVAILABLE = True
+# except ImportError:
+#     READLINE_AVAILABLE = False
 
 from anthropic import Anthropic
 from dotenv import load_dotenv

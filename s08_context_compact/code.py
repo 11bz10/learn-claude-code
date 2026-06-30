@@ -35,11 +35,11 @@ Builds on s07 (skill loading). Usage:
 import ast, json, os, subprocess, time
 from pathlib import Path
 
-try:
-    import readline
-    readline.parse_and_bind('set bind-tty-special-chars off')
-except ImportError:
-    pass
+# try:
+#     import readline
+#     readline.parse_and_bind('set bind-tty-special-chars off')
+# except ImportError:
+#     pass
 
 from anthropic import Anthropic
 from dotenv import load_dotenv
@@ -263,9 +263,10 @@ def spawn_subagent(description: str) -> str:
 # ═══════════════════════════════════════════════════════════
 
 CONTEXT_LIMIT = 50000
-KEEP_RECENT = 3
+KEEP_RECENT = 3 # 最近三个的工具结果保留完整
 PERSIST_THRESHOLD = 30000
 
+# 先简单的看一下字符串的数量
 def estimate_size(msgs): return len(str(msgs))
 
 def _block_type(block):
@@ -291,7 +292,7 @@ def _is_tool_result_message(msg):
                for block in content)
 
 
-# L1: snipCompact — trim middle messages
+# L1: snipCompact — trim middle messages 裁掉无关的旧对话
 def snip_compact(messages, max_messages=50):
     if len(messages) <= max_messages: return messages
     keep_head, keep_tail = 3, max_messages - 3
